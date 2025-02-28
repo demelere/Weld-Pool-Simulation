@@ -25,7 +25,7 @@ int main(int argc, char * argv[]){
 	M = (int)M;
 	const int W = M;
 	dx = 1./((double)(MM)), dy = 1./((double)(MM)); // spacing between nodes
-	double X[M+2], Y[M+2]; // nodal array
+	double X[W+2], Y[W+2]; // nodal array
 	mesh(X, Y); // fills array with positions of nodes
 
 	//============================ SET TIMESTEP
@@ -43,11 +43,11 @@ int main(int argc, char * argv[]){
 	printf("M = %i, tend = %f, dt = %.15e, Nend = %i\n", M, tend, dt, Nend);
 
 	//============================ INITIALIZE PROFILE
-	double T[M+2][M+2], E[M+1][M+1], p[M+1][M+1]; // solution array and max error
+	double T[W+2][W+2], E[W+1][W+1], p[W+1][W+1]; // solution array and max error
 	init(W, T, E, p); // fills solution array
 	//============================ BEGIN TIMESTEPPING
-	double Fx[M+1][M+1], Fy[M+1][M+1]; // initialize flux array
-	double F0[M+1]; // flux distribution array at boundary
+	double Fx[W+1][W+1], Fy[W+1][W+1]; // initialize flux array
+	double F0[W+1]; // flux distribution array at boundary
 	BCFlux(F0); // gaussian vs uniform distribution
 	nbar = 1;
 	maxwidth = 0;

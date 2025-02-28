@@ -1,5 +1,7 @@
 # weld-pool
 
+This is an adaptation of Rekesh Ali and Eric Heikkenen's work to simulate a molten weld puddle.  This attempts to produce a higher fidelity weld pool simulation from the underlying phase changes.
+
 This code intends to simulate a weld pool from a tungsten inert
 gas (TIG) welding process.
 
@@ -62,11 +64,3 @@ You can then graph the results with the included MATLAB code.
 * OpenMP
 * MATLAB
 
-## Authors
-
-* **Rekesh Ali** - *Initial work* - [GitHub](https://github.com/rekeshali)
-* **Eric Heikkenen** - *Edits* - [GitHub](https://github.com/eheikkenen)
-
-## Acknowledgments
-
-* Professor V. Alexiades
