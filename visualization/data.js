@@ -1,5 +1,11 @@
-// Parse and store the simulation data
-const simulationData = [
+// Store different types of simulation data
+const dataTypes = {
+    WELD_POOL: 'weld_pool',
+    TEMPERATURE: 'temperature'
+};
+
+// Parse and store the weld pool simulation data
+const weldPoolData = [
     // time(ms), width(cm), depth(cm), energy(J)
     [0.0000, 0.0000, 0.0100, 0.0000],
     [10.0001, 0.2600, 0.0300, 120.0013],
@@ -69,10 +75,24 @@ const simulationData = [
     [650.0004, 2.0200, 0.7900, 7800.0043]
 ];
 
+// Parse and store the temperature simulation data
+const temperatureData = [
+    // Each row represents temperature values across the domain
+    [1.289775206225967e+03, 1.290999165414191e+03, 1.292211981895628e+03, /* ... */],
+    [1.291021664929975e+03, 1.292247163118151e+03, 1.293461505328815e+03, /* ... */],
+    // ... more rows ...
+];
+
 // Calculate maximum values for normalization
-const maxValues = {
-    time: Math.max(...simulationData.map(d => d[0])),
-    width: Math.max(...simulationData.map(d => d[1])),
-    depth: Math.max(...simulationData.map(d => d[2])),
-    energy: Math.max(...simulationData.map(d => d[3]))
+const weldPoolMaxValues = {
+    time: Math.max(...weldPoolData.map(d => d[0])),
+    width: Math.max(...weldPoolData.map(d => d[1])),
+    depth: Math.max(...weldPoolData.map(d => d[2])),
+    energy: Math.max(...weldPoolData.map(d => d[3]))
+};
+
+// Calculate temperature range
+const temperatureRange = {
+    min: Math.min(...temperatureData.flat()),
+    max: Math.max(...temperatureData.flat())
 }; 

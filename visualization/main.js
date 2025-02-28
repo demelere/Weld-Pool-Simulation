@@ -19,10 +19,16 @@ const programInfo = {
     uniformLocations: {
         projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
         modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+        visualizationType: gl.getUniformLocation(shaderProgram, 'uVisualizationType'),
+        // Weld pool uniforms
         width: gl.getUniformLocation(shaderProgram, 'uWidth'),
         depth: gl.getUniformLocation(shaderProgram, 'uDepth'),
         energy: gl.getUniformLocation(shaderProgram, 'uEnergy'),
         maxEnergy: gl.getUniformLocation(shaderProgram, 'uMaxEnergy'),
+        // Temperature uniforms
+        temperature: gl.getUniformLocation(shaderProgram, 'uTemperature'),
+        minTemp: gl.getUniformLocation(shaderProgram, 'uMinTemp'),
+        maxTemp: gl.getUniformLocation(shaderProgram, 'uMaxTemp'),
     },
 };
 
@@ -63,78 +69,10 @@ function initBuffers(gl) {
     };
 }
 
-// Draw the scene
-function drawScene(gl, programInfo, buffers, currentData) {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Create the projection matrix
-    const projectionMatrix = mat4.create();
-    mat4.ortho(projectionMatrix, -1, 1, -1, 1, -1, 1);
-
-    // Create the modelView matrix
-    const modelViewMatrix = mat4.create();
-
-    // Tell WebGL how to pull out the positions from the position buffer
-    {
-        const numComponents = 2;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-    }
-
-    // Tell WebGL how to pull out the texture coordinates from buffer
-    {
-        const numComponents = 2;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
-        gl.vertexAttribPointer(
-            programInfo.attribLocations.textureCoord,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
-    }
-
-    // Tell WebGL to use our program when drawing
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-    
-    // Set the current simulation data
-    gl.uniform1f(programInfo.uniformLocations.width, currentData[1]);
-    gl.uniform1f(programInfo.uniformLocations.depth, currentData[2]);
-    gl.uniform1f(programInfo.uniformLocations.energy, currentData[3]);
-    gl.uniform1f(programInfo.uniformLocations.maxEnergy, maxValues.energy);
-
-    // Draw the square
-    {
-        const offset = 0;
-        const vertexCount = 4;
-        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-    }
-}
-
 // Animation state
 let currentTimeIndex = 0;
 let isAnimating = true;
+let currentVisualization = dataTypes.TEMPERATURE; // Start with temperature visualization
 
 // UI Elements
 const timeSlider = document.getElementById('timeSlider');
@@ -142,17 +80,87 @@ const timeValue = document.getElementById('timeValue');
 const widthValue = document.getElementById('width');
 const depthValue = document.getElementById('depth');
 const energyValue = document.getElementById('energy');
+const temperatureValue = document.getElementById('temperature');
 const animateCheckbox = document.getElementById('animate');
+const visualizationSelect = document.getElementById('visualizationType');
 
-// Update the display
+function drawScene(gl, programInfo, buffers, timeIndex) {
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const projectionMatrix = mat4.create();
+    mat4.ortho(projectionMatrix, -1, 1, -1, 1, -1, 1);
+    const modelViewMatrix = mat4.create();
+
+    // Set up vertex and texture coordinates
+    {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents, type, normalize, stride, offset);
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+        
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.textureCoord,
+            numComponents, type, normalize, stride, offset);
+        gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
+    }
+
+    gl.useProgram(programInfo.program);
+
+    // Set common uniforms
+    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+    gl.uniform1i(programInfo.uniformLocations.visualizationType, 
+                 currentVisualization === dataTypes.WELD_POOL ? 0 : 1);
+
+    if (currentVisualization === dataTypes.WELD_POOL) {
+        // Set weld pool uniforms
+        const data = weldPoolData[timeIndex];
+        gl.uniform1f(programInfo.uniformLocations.width, data[1]);
+        gl.uniform1f(programInfo.uniformLocations.depth, data[2]);
+        gl.uniform1f(programInfo.uniformLocations.energy, data[3]);
+        gl.uniform1f(programInfo.uniformLocations.maxEnergy, weldPoolMaxValues.energy);
+    } else {
+        // Set temperature uniforms
+        const tempData = temperatureData[timeIndex];
+        const avgTemp = tempData.reduce((a, b) => a + b) / tempData.length;
+        gl.uniform1f(programInfo.uniformLocations.temperature, avgTemp);
+        gl.uniform1f(programInfo.uniformLocations.minTemp, temperatureRange.min);
+        gl.uniform1f(programInfo.uniformLocations.maxTemp, temperatureRange.max);
+    }
+
+    // Draw
+    {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+    }
+}
+
 function updateDisplay(index) {
-    const data = simulationData[index];
-    timeValue.textContent = data[0].toFixed(1);
-    widthValue.textContent = data[1].toFixed(4);
-    depthValue.textContent = data[2].toFixed(4);
-    energyValue.textContent = data[3].toFixed(1);
+    if (currentVisualization === dataTypes.WELD_POOL) {
+        const data = weldPoolData[index];
+        timeValue.textContent = data[0].toFixed(1);
+        widthValue.textContent = data[1].toFixed(4);
+        depthValue.textContent = data[2].toFixed(4);
+        energyValue.textContent = data[3].toFixed(1);
+    } else {
+        const tempData = temperatureData[index];
+        const avgTemp = tempData.reduce((a, b) => a + b) / tempData.length;
+        timeValue.textContent = index;
+        temperatureValue.textContent = avgTemp.toFixed(2);
+    }
+    
     timeSlider.value = index;
-    drawScene(gl, programInfo, buffers, data);
+    drawScene(gl, programInfo, buffers, index);
 }
 
 // Handle window resizing
@@ -172,7 +180,9 @@ function animate() {
     resizeCanvasToDisplaySize(canvas);
     
     if (isAnimating) {
-        currentTimeIndex = (currentTimeIndex + 1) % simulationData.length;
+        const maxIndex = currentVisualization === dataTypes.WELD_POOL ? 
+                        weldPoolData.length : temperatureData.length;
+        currentTimeIndex = (currentTimeIndex + 1) % maxIndex;
         updateDisplay(currentTimeIndex);
     }
     
@@ -187,6 +197,15 @@ timeSlider.addEventListener('input', (e) => {
 
 animateCheckbox.addEventListener('change', (e) => {
     isAnimating = e.target.checked;
+});
+
+visualizationSelect.addEventListener('change', (e) => {
+    currentVisualization = e.target.value;
+    currentTimeIndex = 0;
+    const maxIndex = currentVisualization === dataTypes.WELD_POOL ? 
+                    weldPoolData.length : temperatureData.length;
+    timeSlider.max = maxIndex - 1;
+    updateDisplay(currentTimeIndex);
 });
 
 // Set up mat4 for matrix operations

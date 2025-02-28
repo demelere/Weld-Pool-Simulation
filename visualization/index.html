@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weld Pool Visualization</title>
+    <title>Weld Pool & Temperature Visualization</title>
     <style>
         body {
             margin: 0;
@@ -34,13 +34,34 @@
             padding: 15px;
             border-radius: 8px;
         }
+        select {
+            background: #333;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            margin-bottom: 10px;
+        }
+        .info-weld-pool, .info-temperature {
+            display: none;
+        }
+        .info-weld-pool.active, .info-temperature.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="controls">
+        <div>
+            <label for="visualizationType">Visualization:</label>
+            <select id="visualizationType">
+                <option value="temperature">Temperature</option>
+                <option value="weld_pool">Weld Pool</option>
+            </select>
+        </div>
         <label>
             Time: <span id="timeValue">0</span> ms
-            <input type="range" id="timeSlider" min="0" max="650" value="0" step="10">
+            <input type="range" id="timeSlider" min="0" max="650" value="0" step="1">
         </label>
         <br>
         <label>
@@ -49,13 +70,35 @@
         </label>
     </div>
     <div class="info">
-        <div>Width: <span id="width">0.0</span> cm</div>
-        <div>Depth: <span id="depth">0.0</span> cm</div>
-        <div>Energy: <span id="energy">0.0</span> J</div>
+        <div class="info-weld-pool">
+            <div>Width: <span id="width">0.0</span> cm</div>
+            <div>Depth: <span id="depth">0.0</span> cm</div>
+            <div>Energy: <span id="energy">0.0</span> J</div>
+        </div>
+        <div class="info-temperature">
+            <div>Temperature: <span id="temperature">0.0</span> K</div>
+        </div>
     </div>
     <canvas id="glCanvas"></canvas>
     <script src="shaders.js"></script>
     <script src="data.js"></script>
     <script src="main.js"></script>
+    <script>
+        // Toggle info display based on visualization type
+        document.getElementById('visualizationType').addEventListener('change', (e) => {
+            const weldInfo = document.querySelector('.info-weld-pool');
+            const tempInfo = document.querySelector('.info-temperature');
+            if (e.target.value === 'weld_pool') {
+                weldInfo.classList.add('active');
+                tempInfo.classList.remove('active');
+            } else {
+                weldInfo.classList.remove('active');
+                tempInfo.classList.add('active');
+            }
+        });
+        
+        // Trigger initial state
+        document.getElementById('visualizationType').dispatchEvent(new Event('change'));
+    </script>
 </body>
 </html> 
