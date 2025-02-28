@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weld Pool Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label>
+            Time: <span id="timeValue">0</span> ms
+            <input type="range" id="timeSlider" min="0" max="650" value="0" step="10">
+        </label>
+        <br>
+        <label>
+            <input type="checkbox" id="animate" checked>
+            Animate
+        </label>
+    </div>
+    <div class="info">
+        <div>Width: <span id="width">0.0</span> cm</div>
+        <div>Depth: <span id="depth">0.0</span> cm</div>
+        <div>Energy: <span id="energy">0.0</span> J</div>
+    </div>
+    <canvas id="glCanvas"></canvas>
+    <script src="shaders.js"></script>
+    <script src="data.js"></script>
+    <script src="main.js"></script>
+</body>
+</html> 
