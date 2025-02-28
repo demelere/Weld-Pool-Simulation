@@ -64,3 +64,9 @@ You can then graph the results with the included MATLAB code.
 * OpenMP
 * MATLAB
 
+## Authors
+Rekesh Ali - Initial work - GitHub
+Eric Heikkenen - Edits - GitHub
+
+# Acknowledgments
+Professor V. Alexiades
